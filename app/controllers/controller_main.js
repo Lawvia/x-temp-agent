@@ -3,8 +3,8 @@ const router = express.Router()
 const c_panels = require('./panels/controller_panel')
 const model_migration = require('../models/model_migration')
 const GoogleReceiptVerify = require('google-play-billing-validator')
-const asembelKey = require("./../config/asembel-key.json")
-const asembelmir = require("./../config/asembel-mir.json")
+// const asembelKey = require("./../config/asembel-key.json")
+// const asembelmir = require("./../config/asembel-mir.json")
 // const ServiceAccount = require('./service-account-key')
 // var iap = require('in-app-purchase');
 
