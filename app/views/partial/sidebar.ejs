@@ -1,0 +1,79 @@
+<nav id="sidebar">
+    <ul class="list-unstyled components">
+        <% if(user.role == 1){ %>
+        <li>
+            <a href="#admin_menu" data-toggle="collapse" aria-expanded="<%= (parent == 'admin') %>"
+                class="sidebar-item">
+                <i class="fas fa-lock"></i>&nbsp Admin<span class="float-right dropdown-toggle"></span>
+            </a>
+            <ul class="collapse list-unstyled <% if(parent == 'admin'){%>show<%}%>" id="admin_menu">
+                    <li class="<% if(active == 'ms_panel_users'){%>active<%}%>">
+                        <a class="sidebar-item " href="/panels/admin/ms_panel_users">Panel Users</a>
+                    </li>
+                    <li class="<% if(active == 'ms_panel_users_groups'){%>active<%}%>">
+                        <a class="sidebar-item " href="/panels/admin/ms_panel_users_groups">Vihara</a>
+                    </li>
+                    <li class="<% if(active == 'ms_panel_tahun'){%>active<%}%>">
+                        <a class="sidebar-item " href="/panels/admin/ms_panel_tahun">Tahun</a>
+                    </li>
+                    <li class="<% if(active == 'ms_panel_waktu'){%>active<%}%>">
+                        <a class="sidebar-item " href="/panels/admin/ms_panel_waktu">Waktu</a>
+                    </li>
+                    <li class="<% if(active == 'ms_pandita'){%>active<%}%>">
+                        <a class="sidebar-item " href="/panels/admin/ms_pandita">Pandita</a>
+                    </li>
+                    <li class="<% if(active == 'ms_divisi'){%>active<%}%>">
+                        <a class="sidebar-item " href="/panels/admin/ms_divisi">Divisi</a>
+                    </li>
+                    <li class="<% if(active == 'ms_daerah'){%>active<%}%>">
+                        <a class="sidebar-item " href="/panels/admin/ms_daerah">Daerah</a>
+                    </li>
+                    <li class="<% if(active == 'log'){%>active<%}%>">
+                        <a class="sidebar-item " href="/panels/logs">Logs</a>
+                    </li>
+                </ul>
+            </li>
+        
+        <li>
+            <a href=" #panel_menu" data-toggle="collapse" aria-expanded="<%= (parent == 'panel') %>"
+                class="sidebar-item ">
+                <i class="fas fa-columns"></i>&nbsp Data Umat<span class="float-right dropdown-toggle"></span>
+            </a>
+            <ul class="collapse list-unstyled <% if(parent == 'panel'){%>show<%}%>" id="panel_menu">
+                <li class="<% if(active == 'ms_umat'){%>active<%}%>">
+                    <a class="sidebar-item " href="/panels/umat">List</a>
+                </li>
+                <li class="<% if(active == 'ms_cetya'){%>active<%}%>">
+                    <a class="sidebar-item " href="/panels/cetya">Cetya</a>
+                </li>
+                <li class="<% if(active == 'ms_keluarga'){%>active<%}%>">
+                    <a class="sidebar-item " href="/panels/umat/keluarga">Keluarga</a>
+                </li>
+            </ul>
+        </li>
+        <% } %>
+        <!--  -->
+        <% if((user.role == 1) || (user.groups.includes(5) || 1 == 1)){ %>
+            <li>
+                <a href="#panel_shop" data-toggle="collapse" aria-expanded="<%= (parent == 'dharma') %>"
+                    class="sidebar-item">
+                    <i class="fas fa-person-booth"></i>&nbsp Kelas Dharma<span class="float-right dropdown-toggle"></span>
+                </a>
+                <ul class="collapse list-unstyled <% if(parent == 'dharma'){%>show<%}%>" id="panel_shop">
+                    <li class="<% if(active == 'kelas'){%>active<%}%>">
+                        <a class="sidebar-item " href="/panels/kelas">List</a>
+                    </li>
+    
+                </ul>
+            </li>
+        <% } %>
+        <% if((user.role == 1) || (user.groups.length >= 1 && user.template.length >= 1)){ %>
+            <li class="<% if(active == 'karir'){%>active<%}%>">
+                <a href="/panels/umat/karir_suci"
+                    class="sidebar-item">
+                    <i class="fas fa-hand-holding-heart"></i>&nbsp Karir Suci
+                </a>
+            </li>
+        <% } %>
+    </ul>
+</nav>

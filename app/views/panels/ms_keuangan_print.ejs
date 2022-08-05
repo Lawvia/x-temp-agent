@@ -1,0 +1,309 @@
+<% var css_list = ['/css/tokenfield.css']%>
+<% var js_list=[]%>
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="shortcut icon" href="/image/favicon.ico" type="image/x-icon">
+	<link rel="apple-touch-icon" href="/image/apple-touch-icon.png">
+	<link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/fontawesome/css/all.min.css">
+	<link rel="stylesheet" href="/css/style.css">
+	<link rel="stylesheet" href="/css/sidebar.css">
+	<title>ADMS</title>
+</head>
+<body style="background:#eeeeee50">
+<style>
+	body{
+		font-size: 20px;
+	}
+	.switch {
+	position: relative;
+	display: inline-block;
+	width: 60px;
+	height: 34px;
+	}
+	.switch input { 
+	opacity: 0;
+	width: 0;
+	height: 0;
+	}
+
+	.slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	-webkit-transition: .4s;
+	transition: .4s;
+	}
+
+	.slider:before {
+	position: absolute;
+	content: "";
+	height: 26px;
+	width: 26px;
+	left: 4px;
+	bottom: 4px;
+	background-color: white;
+	-webkit-transition: .4s;
+	transition: .4s;
+	}
+
+	input:checked + .slider {
+	background-color: #2196F3;
+	}
+
+	input:focus + .slider {
+	box-shadow: 0 0 1px #2196F3;
+	}
+
+	input:checked + .slider:before {
+	-webkit-transform: translateX(26px);
+	-ms-transform: translateX(26px);
+	transform: translateX(26px);
+	}
+
+	/* Rounded sliders */
+	.slider.round {
+	border-radius: 34px;
+	}
+
+	.slider.round:before {
+	border-radius: 50%;
+	}
+
+	.dtpicker-button{
+		background-color:#ac2126 !important;
+		border-radius: 16px;
+	}
+	@media print {
+		.noPrint{
+			display:none;
+		}
+	}
+</style>
+<link rel="stylesheet" href="/css/bootstrap-tagsinput.css">
+<link rel="stylesheet" type="text/css" href="/css/date-picker.css" />
+
+<div class="wrapper" style="margin-top:56px">
+	<div id="pageHeader-first">
+<div id="content" class="container-fluid" style="width:100%; margin-top:0">
+		<div id="background-content" style="padding: 0;">
+			<form id="formSendTemplate">
+			<div class="card-header py-3 d-flex noPrint" style="justify-content: space-between;margin-bottom: 10px;">
+				<div>
+					<h4 class="h4 mb-2" style="color: #ac2126; font-weight: bold;">Data Keuangan</h4>
+					<p class="mb-4">Kelas Dharma: <%= result.nama_kelas %> / <%= result.tanggal_kelas%></p>
+				</div>
+				<div style="align-self: center;">
+					<button type="button" class="btn btn-warning btn-md noPrint"
+					onclick="download_pdf()" >
+						<i class="fa fa-print"></i>&nbsp; Download
+					</button>
+
+					<button type="button" class="btn btn-primary btn-md noPrint"
+					onclick="window.print();" >
+						<i class="fa fa-print"></i>&nbsp; Print
+					</button>
+					
+				</div>
+			</div>
+
+			
+
+				<div class="card-header py-3" style="justify-content: space-between;margin-bottom: 10px; background-color: white;">
+					<div class="form-group">
+						<table class="table table-bordered" style='padding-left: 2%; width: 100%;'>
+							<thead class="thead-light">
+								<tr>
+									<th style="width: 50%;"></th>
+									<th style="width: 35%;"></th>
+									<th style="width: 15%;"></th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>Total Peserta / 班員總人數</td>
+									<td><p style="float: right;">乾: <%= count.males %> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 坤: <%= count.females %> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 共: <%= count.total %> &nbsp; &nbsp; </p></td>
+									<td>人</td>
+								</tr>
+								<tr>
+									<td>Total Sumbangan Peserta (CASH)<br> 班員助班費 (現金)<br>
+										Total Sumbangan Peserta (TRF / QRIS)<br> 班員助班費 (轉賬)<br>
+										Total Sumbangan Donatur/Pengabdi (CASH)<br>辦事人員及道親助班費 (現金)<br>
+										Total Sumbangan Donatur/Pengabdi (TRF / QRIS)<br> 辦事人員及道親助班費 (轉賬)
+									</td>
+									<td><a style="float: right;" id="total-cash-pe"><%= sumbanganPe.sumbangan %></a><br><br>
+										<a style="float: right;" id="total-trf-pe"><%= sumbanganPe.transfer + sumbanganPe.qris%></a><br><br>
+										<a style="float: right;" id="total-cash-do"><%= sumbanganDo.sumbangan + sumbanganDi.sumbangan %></a><br><br>
+										<a style="float: right;" id="total-trf-do"><%= sumbanganDo.transfer + sumbanganDo.qris + sumbanganDi.transfer + sumbanganDi.qris %></a><br>
+									</td>
+									<td style="vertical-align: middle;">盾</td>
+								</tr>
+								<tr>
+									<td><a id="divisi-list"></a>
+									</td>
+									<td><a id="divisi-content" style="float: right;"></a>
+									</td>
+									<td style="vertical-align: middle;">盾</td>
+								</tr>
+								<tr>
+									<td>Total Pemasukan<br>總收入<br>
+										Total Pengeluaran<br>總支出<br>
+										# Sisa Saldo #<br># 結餘 #
+									</td>
+									<td><a id="total-income" class="badge badge-pill badge-success" style="float: right;">1241421</a><br><br>
+										<a id="total-cost" class="badge badge-pill badge-warning" style="float: right;">1241421</a><br><br>
+										<a id="balance" class="badge badge-pill badge-info" style="float: right;">1241421</a><br>
+									</td>
+									<td style="vertical-align: middle;">盾</td>
+								</tr>
+								<tr>
+									<td>Total CASH<br>
+										Total TRF / QRIS <br>
+									</td>
+									<td><a id="total-cash" style="float: right;">1241421</a><br>
+										<a id="total-qris" style="float: right;">1241421</a><br>
+									</td>
+									<td></td>
+								</tr>
+							</tbody>
+						</table>
+						
+						
+					</div>
+				</div>
+				
+
+					
+				</form>
+		</div>
+	</div>
+</div>
+<div id="pageFooter-first">Footer on first page</div>
+</div>
+
+<script src="/js/jquery-3.6.0.min.js"></script>
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script>
+	var group_token
+	var phone_token
+	var lengthParam
+	var templateData = null
+	var countPart = 0;
+	var divisi = <%- JSON.stringify(divisi) %>;
+	var costDivisi = <%- JSON.stringify(costDivisi) %>;
+	var sumbanganPe = <%- JSON.stringify(sumbanganPe) %>;
+	var sumbanganDi = <%- JSON.stringify(sumbanganDi) %>;
+	var sumbanganDo = <%- JSON.stringify(sumbanganDo) %>;
+	var totalcost = <%- JSON.stringify(totalcost) %>;
+
+
+	//add partisipan
+    $("#buttonAddQuest").click(function () {
+		var data_dum = {
+			keterangan: "",
+			nominal: "",
+			PIC: "",
+			divisi: "",
+			id: ""
+		}
+        $("#list_quest_body").append(addQuestRow(countPart))
+        countPart++;
+    })
+
+	function addQuestRow(row_num, data) {
+        var row_id = "participant_row_" + row_num;
+      
+        var html = `<tr id='` + row_id + `'>`
+        html+=`<input type="hidden" name="participant:` + row_num + `:peserta" class="form-control">`
+		html += `<td><input type="text" name="keterangan:` + row_num + `:peserta" class="form-control" placeholder="Biaya" value="`+data.keterangan+`"></td>`
+		html += `<td><input type="text" name="nominal:` + row_num + `:peserta" class="form-control" placeholder=" " value="`+addCommas(data.nominal)+`" onchange="this.value=addCommas(this.value)"></td>`
+		html += `<td><input type="text" name="pic:` + row_num + `:peserta" class="form-control" placeholder="PIC Biaya" value="`+data.PIC+`"></td>`
+		
+		html += `<td><select id="" name="divisi:` + row_num + `:type" class="form-control type">`
+		html += `<option value="" selected disabled>Pilih</option>`
+        for (var i =0; i< divisi.length; i++){
+			var check = (divisi[i].id == data.divisi)?"selected":""
+			html += `<option value="`+divisi[i].id+`" `+check+`>`+divisi[i].name +`</option>`
+		}
+		html += `</select></td>`
+      html+=`<td><button type="submit" id="bttn_delete_row" onclick="removePart('` + row_id + `')" class="btn btn-danger">Delete</button></td>`
+        html+=`</tr>`;
+        return html
+    }
+
+	function removePart(div){
+        $("#" + div).remove();
+        countPart = countPart - 1
+    }
+
+	function addCommas(nStr)
+	{
+		nStr += '';
+		x = nStr.split('.');
+		x1 = x[0];
+		x2 = x.length > 1 ? '.' + x[1] : '';
+		var rgx = /(\d+)(\d{3})/;
+		while (rgx.test(x1)) {
+			x1 = x1.replace(rgx, '$1' + ',' + '$2');
+		}
+		return x1 + x2;
+	}
+	
+
+	$(document).ready(function () {
+		var divisihtml = ""
+		var contentDivisi = ""
+		for (var i=0; i< divisi.length; i++){
+			divisihtml += "Total Pengeluaran "+divisi[i].name+"<br>"+divisi[i].nama_mandarin+"支出<br>"
+			if (i < costDivisi.length)
+			contentDivisi += "  "+ addCommas(costDivisi[i].total)+"<br><br>"
+			else contentDivisi += "  0<br><br>"
+		}
+		$('#divisi-list').html(divisihtml)
+		$('#divisi-content').html(contentDivisi)
+
+		$('#total-cash-pe').html(" "+addCommas(sumbanganPe.sumbangan))
+		$('#total-trf-pe').html(" "+addCommas(sumbanganPe.transfer + sumbanganPe.qris))
+		$('#total-cash-do').html(" "+addCommas(sumbanganDo.sumbangan + sumbanganDi.sumbangan))
+		$('#total-trf-do').html(" "+addCommas(sumbanganDo.transfer + sumbanganDo.qris + sumbanganDi.transfer + sumbanganDi.qris))
+
+		var total = sumbanganPe.sumbangan + sumbanganPe.transfer + sumbanganPe.qris + sumbanganDo.sumbangan + sumbanganDi.sumbangan + sumbanganDo.transfer + sumbanganDo.qris + sumbanganDi.transfer + sumbanganDi.qris
+		$('#total-income').html(" "+addCommas(total))
+		$('#total-cost').html(" "+addCommas(totalcost.total))
+		$('#balance').html(" "+addCommas(total - totalcost.total))
+
+		$('#total-cash').html(" "+addCommas(sumbanganPe.sumbangan + sumbanganDo.sumbangan + sumbanganDi.sumbangan))
+		$('#total-qris').html(" "+addCommas(sumbanganPe.transfer + sumbanganPe.qris + sumbanganDo.transfer + sumbanganDo.qris + sumbanganDi.transfer + sumbanganDi.qris))
+
+	});
+
+	function download_pdf() {
+		
+			posting({
+				url: "/panels/kelas/api_key",
+				param: {
+					app_id: 1,
+					app_name: ""
+				},
+				done: function (data) {
+					console.log(data);
+					// window.location.href = "/panels/admin/ms_panel_tahun";
+				}
+			})
+	};
+
+	function posting(data) {
+		$.ajax({
+			method: "POST",
+			url: data.url,
+			data: data.param
+		}).done(data.done);
+	};
+</script>

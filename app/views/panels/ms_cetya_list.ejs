@@ -1,0 +1,180 @@
+<% var css_list = ['/css/tokenfield.css']%>
+<% var js_list=[]%>
+<%- include('../partial/header',{css:css_list, js:js_list}) %>
+<%- include('../partial/navbar',{user:user}) %>
+<div class="wrapper" style="margin-top:56px">
+	<%- include('../partial/sidebar', {active:"ms_umat", parent:"panel", user:user}) %>
+	<div id="content" class="container-fluid">
+		<div id="background-content">
+			<div class="card-header py-3 d-flex" style="justify-content: space-between;margin-bottom: 10px;">
+				<div>
+					<h4 class="h4 mb-2" style="color: #ac2126; font-weight: bold;">List Cetya&nbsp;<i class="fas fa-phone"></i></h4>
+					<p class="mb-4">List Cetya Terdaftar</p>
+				</div>
+				<div style="align-self: center;">
+					
+					<button type="button" class="btn btn-primary btn-md"
+					onclick="location.href='/panels/cetya/add'" title='Add'>
+						<i class="fa fa-plus"></i>&nbsp; Add new cetya
+					</button>
+				</div>
+			</div>
+
+			<% if (message_success != "") { %>
+				<div class="alert alert-success">
+					<%= message_success %>
+				</div>
+				<% } %>
+
+				<% if (message_fail != "") { %>
+				<div class="alert alert-danger">
+					<%= message_fail %>
+				</div>
+				<% } %>
+
+				<% if (message_warning != "") { %>
+				<div class="alert alert-warning">
+					<%= message_warning %>
+				</div>
+				<% } %>
+			
+			<table id="groups_table" class="table table-striped table-bordered" style="width: 100%;font-size:14px;">
+				<thead class="thead-dark">
+					<tr>
+						<th>Nama Cetya</th>
+						<th>No Kontak</th>
+						<th>Alamat</th>
+						<th>Tanggal Anthan</th>
+						<th>Active</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+	</div>
+</div>
+
+
+<%- include('../partial/javascript'); %>
+<script>
+	$(document).ready(function () {
+		$('#groups_table').DataTable({
+			"processing": true,
+			"serverSide": true,
+			"ajax": {
+				"url": '/panels/cetya/list',
+				"method": "POST",
+			},
+			"columns": [
+				{ "data": "nama_cetya" },
+				{ "data": "no_kontak" },
+				{ "data": "alamat" },
+				{
+					"data": "tanggal_anthan",
+					render: function (data, type, row) {
+						if (!data) return "<i class='not-set'>Not set</i>"
+						if (type === "sort" || type === "type") {
+							return data;
+						}
+						return moment(data).format("DD-MM-YYYY, h:mm:ss")
+					}
+				},
+				{
+					"data": "active",
+					render: function (data, type, row) {
+						if (data == 1)
+							return "<i class='fas fa-play text-success'></i>"
+						else if (data == 0)
+							return "<i class='fas fa-stop text-danger'></i>"
+					}
+				},
+				{
+					orderable: false,
+					searchable: false,
+					data: { "id": "id", "nama_cetya": "nama_cetya" },
+					render: function (data, type, row) {
+						var button = "<div>"
+						// if (data.role == 2) {
+						// 	button += "<button class='btn btn-info fix-btn' onclick='do_update_group(\"" + data.id_panel_users + "\")'  title='Edit Groups'><i class='far fa-edit'></i></button>"
+						// 	button += " | "
+						// }
+						button += "<button class='btn btn-info' onclick='location.href=\"/panels/cetya/detail/"+data.id+"\";'  title='Edit Number'>DETAIL</button>"
+						button += " | "
+				
+						button += "<button class='btn btn-danger' onclick='delete_phone(\"" + data.id + "\",\"" + data.nama_cetya + "\")' title='Delete'><i class='fas fa-times'></i></button>"
+						button += "</div>"
+						return button
+					}
+				}
+			]
+		});
+		$('#buttonAddApp').click(function () {
+			do_add_user()
+		})
+		$('#regenerateapikey').click(function(){
+			change_api_key($('#regenerateapikey_id').val(), $('#regenerateapikey_name').val())
+		})
+
+	});
+
+	function posting(data) {
+		$.ajax({
+			method: "POST",
+			url: data.url,
+			data: data.param
+		}).done(data.done);
+	};
+
+	//add apps
+	function do_add_user() {
+		$("#formAddGroup").validate({
+			rules: {
+				phone_name: "required",
+				phone: "required",
+				description: "required"
+			},
+			submitHandler: function (form) {
+				form.submit();
+			}
+		});
+	};
+
+	function do_show_edit_group(id) {
+		$.ajax({
+			method: "POST",
+			url: "/panels/phone/get",
+			data: {
+				app_id: id
+			}
+		}).done(function (res) {
+			$("#phone_id").val(id)
+			$("#phone_name").val(res.data.name)
+			$("#phone").val(res.data.phone)
+			$("#description").text(res.data.description)
+			$('#addApp').modal('show');
+		})
+	};
+
+	function delete_phone(id_app, name) {
+		if (confirm("Are you sure want to delete " + name + "?")) {
+			posting({
+				url: "/panels/cetya/delete",
+				param: {
+					id_app: id_app,
+				},
+				done: function (data) {
+					alert(data.status);
+					window.location.href = "/panels/phone";
+				}
+			})
+		}
+	};
+
+	function do_empty_field() {
+		$("#phone_id").val("")
+		$("#phone_name").val("")
+		$("#phone").val("")
+		$("#description").text("")
+	}
+
+</script>

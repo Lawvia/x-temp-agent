@@ -1,0 +1,169 @@
+<% var css_list = ['/css/tokenfield.css']%>
+<% var js_list=[]%>
+<%- include('../partial/header',{css:css_list, js:js_list}) %>
+<%- include('../partial/navbar',{user:user}) %>
+<div class="wrapper" style="margin-top:56px">
+	<%- include('../partial/sidebar', {active:"ms_panel_tahun", parent:"admin", user:user}) %>
+	<div id="content" class="container-fluid">
+		<div id="background-content">
+			<div class="card-header py-3 d-flex" style="justify-content: space-between;margin-bottom: 10px;">
+				<div>
+					<h4 class="h4 mb-2" style="color: #ac2126; font-weight: bold;">Master Tahun&nbsp;<i class="fas fa-search-location"></i></h4>
+					<p class="mb-4">Data Tahun</p>
+				</div>
+				<div style="align-self: center;">
+					<button type="button" class="btn btn-primary btn-md" data-toggle="modal" data-target="#addApp"
+						onclick='do_empty_field()' title='Add'>
+						<i class="fa fa-plus"></i>&nbsp; Add new tahun
+					</button>
+				</div>
+			</div>
+
+			<% if (message_success != "") { %>
+				<div class="alert alert-success">
+					<%= message_success %>
+				</div>
+				<% } %>
+
+				<% if (message_fail != "") { %>
+				<div class="alert alert-danger">
+					<%= message_fail %>
+				</div>
+				<% } %>
+
+				<% if (message_warning != "") { %>
+				<div class="alert alert-warning">
+					<%= message_warning %>
+				</div>
+				<% } %>
+			
+			<table id="groups_table" class="table table-striped table-bordered" style="width: 100%;font-size:14px;">
+				<thead class="thead-dark">
+					<tr>
+						<th>ID</th>
+						<th>Tahun</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+	</div>
+</div>
+
+<%- include('../modal/ms_tahun/modal_add_tahun') %>
+<%- include('../partial/javascript'); %>
+<script>
+	$(document).ready(function () {
+		$('#groups_table').DataTable({
+			"processing": true,
+			"serverSide": true,
+			"ajax": {
+				"url": '/panels/admin/ms_panel_tahun/list',
+				"method": "POST",
+			},
+			"columns": [
+				{ "data": "id" },
+				{ "data": "tahun" },
+				{
+					orderable: false,
+					searchable: false,
+					data: { "id": "id", "tahun":"tahun" },
+					render: function (data, type, row) {
+						var button = "<div>"
+						// if (data.role == 2) {
+						// 	button += "<button class='btn btn-info fix-btn' onclick='do_update_group(\"" + data.id_panel_users + "\")'  title='Edit Groups'><i class='far fa-edit'></i></button>"
+						// 	button += " | "
+						// }
+						button += "<button class='btn btn-info fix-btn' onclick='do_show_edit_group(\"" + data.id + "\")'  title='Edit Apps'><i class='far fa-edit'></i></button>"
+						
+						// button += " | "
+						// button += "<button class='btn btn-danger fix-btn' onclick='delete_phone(\"" + data.id + "\",\"" + data.tahun + "\")' title='Delete'><i class='fas fa-times'></i></button>"
+						// button += "</div>"
+						return button
+					}
+				}
+			]
+		});
+		$('#buttonAddApp').click(function () {
+			do_add_user()
+		})
+		$('#regenerateapikey').click(function(){
+			change_api_key($('#regenerateapikey_id').val(), $('#regenerateapikey_name').val())
+		})
+
+	});
+
+	function posting(data) {
+		$.ajax({
+			method: "POST",
+			url: data.url,
+			data: data.param
+		}).done(data.done);
+	};
+
+	function change_api_key(id, name) {
+		if (confirm("Are you sure want to regenerate api key?")) {
+			posting({
+				url: "/panels/admin/ms_panel_tahun/api_key",
+				param: {
+					app_id: id,
+					app_name: name
+				},
+				done: function (data) {
+					alert(data.status);
+					window.location.href = "/panels/admin/ms_panel_tahun";
+				}
+			})
+		}
+	};
+
+	//add apps
+	function do_add_user() {
+		$("#formAddGroup").validate({
+			rules: {
+				app_name: "required",
+				alamat: "required"
+			},
+			submitHandler: function (form) {
+				form.submit();
+			}
+		});
+	};
+
+	function do_show_edit_group(id) {
+		$.ajax({
+			method: "POST",
+			url: "/panels/admin/ms_panel_tahun/get",
+			data: {
+				app_id: id
+			}
+		}).done(function (res) {
+			$("#app_id").val(id)
+			$("#app_name").val(res.data.tahun)
+			$('#addApp').modal('show');
+		})
+	};
+
+	function active(id_app, isActive) {
+		if (confirm("Are you sure want to " + (isActive ? "deactive" : "activate") + "?")) {
+			posting({
+				url: "/panels/admin/ms_panel_tahun/active",
+				param: {
+					id_app: id_app,
+				},
+				done: function (data) {
+					alert(data.status);
+					window.location.href = "/panels/admin/ms_panel_tahun";
+				}
+			})
+		}
+	};
+
+	function do_empty_field() {
+		$("#app_id").val("")
+		$("#app_name").val("")
+		$("#alamat").text("")
+		$("#kota").val("")
+	}
+
+</script>

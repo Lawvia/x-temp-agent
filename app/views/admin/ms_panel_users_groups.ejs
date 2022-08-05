@@ -1,0 +1,248 @@
+<% var css_list = ['/css/tokenfield.css']%>
+<% var js_list=[]%>
+<%- include('../partial/header',{css:css_list, js:js_list}) %>
+<%- include('../partial/navbar',{user:user}) %>
+<div class="wrapper" style="margin-top:56px">
+	<%- include('../partial/sidebar', {active:"ms_panel_users_groups", parent:"admin", user:user}) %>
+	<div id="content" class="container-fluid">
+		<div id="background-content">
+			<div class="card-header py-3 d-flex" style="justify-content: space-between;margin-bottom: 10px;">
+				<div>
+					<h4 class="h4 mb-2" style="color: #ac2126; font-weight: bold;">Vihara&nbsp;<i class="fas fa-search-location"></i></h4>
+					<p class="mb-4">List of all registered vihara</p>
+				</div>
+				<div style="align-self: center;">
+					<button type="button" class="btn btn-primary btn-md" data-toggle="modal" data-target="#addApp"
+						onclick='do_empty_field()' title='Add'>
+						<i class="fa fa-plus"></i>&nbsp; Add new vihara
+					</button>
+				</div>
+			</div>
+
+			<% if (message_success != "") { %>
+				<div class="alert alert-success">
+					<%= message_success %>
+				</div>
+				<% } %>
+
+				<% if (message_fail != "") { %>
+				<div class="alert alert-danger">
+					<%= message_fail %>
+				</div>
+				<% } %>
+
+				<% if (message_warning != "") { %>
+				<div class="alert alert-warning">
+					<%= message_warning %>
+				</div>
+				<% } %>
+			
+			<table id="groups_table" class="table table-striped table-bordered" style="width: 100%;font-size:14px;">
+				<thead class="thead-dark">
+					<tr>
+						<th>ID</th>
+						<th>Name</th>
+						<th>Alamat</th>
+						<th>Active</th>
+						<th>Created By</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+	</div>
+</div>
+
+<%- include('../modal/ms_application/modal_add_groups') %>
+<%- include('../modal/ms_application/modal_show_api_key') %>
+<%- include('../modal/ms_application/modal_show_user') %>
+<%- include('../partial/javascript'); %>
+<script>
+	$(document).ready(function () {
+		$('#groups_table').DataTable({
+			"processing": true,
+			"serverSide": true,
+			"ajax": {
+				"url": '/panels/admin/ms_panel_users_groups/list',
+				"method": "POST",
+			},
+			"columns": [
+				{ "data": "id" },
+				{ "data": "name" },
+				{ "data": "alamat" },
+				{
+					"data": "active",
+					render: function (data, type, row) {
+						if (data == 1)
+							return "<i class='fas fa-play text-success'></i>"
+						else if (data == 0)
+							return "<i class='fas fa-stop text-danger'></i>"
+					}
+				},
+				{ "data": "created_by" },
+				{
+					orderable: false,
+					searchable: false,
+					data: { "id": "id", "is_active": "active", "api_key":"api_key" },
+					render: function (data, type, row) {
+						var button = "<div>"
+						// if (data.role == 2) {
+						// 	button += "<button class='btn btn-info fix-btn' onclick='do_update_group(\"" + data.id_panel_users + "\")'  title='Edit Groups'><i class='far fa-edit'></i></button>"
+						// 	button += " | "
+						// }
+						button += "<button class='btn btn-info fix-btn' onclick='do_show_edit_group(\"" + data.id + "\")'  title='Edit Apps'><i class='far fa-edit'></i></button>"
+						button += " | "
+						// button += "<button class='btn btn-info fix-btn' onclick='view_api_key(\"" + data.id + "\")' title='Api Key'><b>API</b></button>"
+						// button += " | "
+						button += "<button class='btn btn-info fix-btn' onclick='view_user(\"" + data.id + "\")'  title='See User'><i class='far fa-user'></i></button>"
+						button += " | "
+						if (!data.active)
+							button += "<button class='btn btn-success fix-btn' onclick='active(\"" + data.id + "\"," + data.active + ")' title='Activate'><i class='fas fa-play'></i></button>"
+						else
+							button += "<button class='btn btn-danger fix-btn' onclick='active(\"" + data.id + "\"," + data.active + ")' title='Deactivate'><i class='fas fa-pause'></i></button>"
+						button += "</div>"
+						return button
+					}
+				}
+			]
+		});
+		$('#buttonAddApp').click(function () {
+			do_add_user()
+		})
+		$('#regenerateapikey').click(function(){
+			change_api_key($('#regenerateapikey_id').val(), $('#regenerateapikey_name').val())
+		})
+
+	});
+
+	function posting(data) {
+		$.ajax({
+			method: "POST",
+			url: data.url,
+			data: data.param
+		}).done(data.done);
+	};
+
+	function change_api_key(id, name) {
+		if (confirm("Are you sure want to regenerate api key?")) {
+			posting({
+				url: "/panels/admin/ms_panel_users_groups/api_key",
+				param: {
+					app_id: id,
+					app_name: name
+				},
+				done: function (data) {
+					alert(data.status);
+					window.location.href = "/panels/admin/ms_panel_users_groups";
+				}
+			})
+		}
+	};
+
+	function view_api_key(id) {
+		posting({
+			url: "/panels/admin/ms_panel_users_groups/get",
+			param: {
+				app_id: id,
+			},
+			done: function (data) {
+				console.log("okoko ", data.data)
+				var data = data.data
+				$('#showapikeyvalue').html(data.api_key);
+				$('#regenerateapikey_id').val(id)
+				$('#regenerateapikey_name').val(data.name)
+				$('#showApiKey').modal('show');
+			}
+		})
+	};
+
+	function view_user(id) {
+		posting({
+			url: "/panels/admin/ms_panel_users_groups/get_user",
+			param: {
+				app_id: id,
+			},
+			done: function (data) {
+				console.log("user ", data.data)
+				if (data.data.length > 0){
+					var data = data.data
+					var tabel = "";
+					tabel += `<table id="groups_table" class="table table-striped table-bordered" style="width: 100%;font-size:14px;">
+						<thead class="thead-dark">
+							<tr>
+								<th>Username</th>
+								<th>Access Given</th>
+							</tr>
+						</thead>`;
+						tabel += `<tbody>`
+							for (var i=0;i<data.length;i++){
+								tabel += `<tr>
+								<td>`+data[i].username+`</td>`;
+								tabel += `<td>`+data[i].created+`</td>
+								</tr>`;
+							}	
+					tabel += `</tbody>
+					</table>`;
+					
+					$('#listUser').html(tabel);
+				}else{
+					$('#listUser').html("<center><i>Empty</i></center>");
+				}
+				$('#showUser').modal('show');
+			}
+		})
+	};
+
+
+	//add apps
+	function do_add_user() {
+		$("#formAddGroup").validate({
+			rules: {
+				app_name: "required",
+				alamat: "required"
+			},
+			submitHandler: function (form) {
+				form.submit();
+			}
+		});
+	};
+
+	function do_show_edit_group(id) {
+		$.ajax({
+			method: "POST",
+			url: "/panels/admin/ms_panel_users_groups/get",
+			data: {
+				app_id: id
+			}
+		}).done(function (res) {
+			$("#app_id").val(id)
+			$("#app_name").val(res.data.name)
+			$("#alamat").text(res.data.alamat)
+			$("#kota").val(res.data.kota)
+			$('#addApp').modal('show');
+		})
+	};
+
+	function active(id_app, isActive) {
+		if (confirm("Are you sure want to " + (isActive ? "deactive" : "activate") + "?")) {
+			posting({
+				url: "/panels/admin/ms_panel_users_groups/active",
+				param: {
+					id_app: id_app,
+				},
+				done: function (data) {
+					alert(data.status);
+					window.location.href = "/panels/admin/ms_panel_users_groups";
+				}
+			})
+		}
+	};
+
+	function do_empty_field() {
+		$("#app_id").val("")
+		$("#app_name").val("")
+		$("#alamat").text("")
+		$("#kota").val("")
+	}
+
+</script>

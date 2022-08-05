@@ -1,0 +1,56 @@
+<script src="/js/jquery-3.6.0.min.js"></script>
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script src="/js/moment-with-locales.min.js"></script>
+<script src="/js/sidebar.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/rowreorder/1.2.5/js/dataTables.rowReorder.min.js"></script>
+<script>
+    function getFormData(form_id) {
+        const form = document.querySelector('#' + form_id);
+        const data = new FormData(form)
+        const arrayData = Array.from(data)
+        var listData = {}
+        var currType = "";
+        var currCount = 0;
+        var currObj = {}
+        for (let index = 0; index < arrayData.length; index++) {
+            const element = arrayData[index]
+            var [type, count, key] = element[0].split(':')
+                //console.log(type, count, key)
+            var value = element[1]
+            if (currType != type) {
+                currType = type
+                currCount = count;
+                listData[currType] = Object.assign({}, listData[currType])
+                listData[currType] = []
+            }
+            if (index == 0) currCount = count
+            if (count && key) {
+                currObj[key] = Object.assign({}, currObj[key])
+                currObj["num_row"] = count;
+                currObj[key] = value;
+                if (index < arrayData.length - 1) {
+                    const nextElement = arrayData[index + 1]
+                    var [nextType, nextCount, nextKey] = nextElement[0].split(':')
+                    if (nextType != currType || currCount != parseInt(nextCount)) {
+                        if (currCount != parseInt(nextCount)) {
+                            currCount = parseInt(nextCount)
+                        }
+                        listData[currType].push(currObj)
+                        currObj = {}
+                    }
+                } else {
+                    listData[type].push(currObj)
+                }
+            } else {
+                listData[type] = value
+            }
+        }
+        return listData
+    }
+
+</script>
+
+<!-- Chosen Bootstrap -->
+<script type="text/javascript" src="/js/chosen.jquery.min.js"></script>

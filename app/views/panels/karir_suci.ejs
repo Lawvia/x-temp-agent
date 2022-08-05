@@ -1,0 +1,344 @@
+<% var css_list = ['/css/tokenfield.css']%>
+<% var js_list=[]%>
+<%- include('../partial/header',{css:css_list, js:js_list}) %>
+<%- include('../partial/navbar',{user:user}) %>
+<style>
+	.switch {
+	position: relative;
+	display: inline-block;
+	width: 60px;
+	height: 34px;
+	}
+	.switch input { 
+	opacity: 0;
+	width: 0;
+	height: 0;
+	}
+
+	.slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	-webkit-transition: .4s;
+	transition: .4s;
+	}
+
+	.slider:before {
+	position: absolute;
+	content: "";
+	height: 26px;
+	width: 26px;
+	left: 4px;
+	bottom: 4px;
+	background-color: white;
+	-webkit-transition: .4s;
+	transition: .4s;
+	}
+
+	input:checked + .slider {
+	background-color: #2196F3;
+	}
+
+	input:focus + .slider {
+	box-shadow: 0 0 1px #2196F3;
+	}
+
+	input:checked + .slider:before {
+	-webkit-transform: translateX(26px);
+	-ms-transform: translateX(26px);
+	transform: translateX(26px);
+	}
+
+	/* Rounded sliders */
+	.slider.round {
+	border-radius: 34px;
+	}
+
+	.slider.round:before {
+	border-radius: 50%;
+	}
+
+	.dtpicker-button{
+		background-color:#ac2126 !important;
+		border-radius: 16px;
+	}
+</style>
+<link rel="stylesheet" href="/css/bootstrap-tagsinput.css">
+<link rel="stylesheet" type="text/css" href="/css/date-picker.css" />
+
+<div class="wrapper" style="margin-top:56px">
+	<%- include('../partial/sidebar', {active:"karir", parent:"panel", user:user}) %>
+	<div id="content" class="container-fluid">
+		<div id="background-content">
+			<form id="formSendTemplate">
+			<div class="card-header py-3 d-flex" style="justify-content: space-between;margin-bottom: 10px;">
+				<div>
+					<h4 class="h4 mb-2" style="color: #ac2126; font-weight: bold;">Data Karir Suci</h4>
+					<p class="mb-4">Silahkan pilih kelas sidang dharma dari list</p>
+				</div>
+				<div style="align-self: center;">
+					<button id="btnSync" type="button" class="btn btn-info btn-md"
+						onclick='do_empty_field()' title='Sync'>
+						<div id="spinnerLoad" class="spinner-border text-light" style="display: none;" role="status"></div>
+						<div id="templateText"><i class="fa fa-hourglass-start"></i>&nbsp; Submit</div>						
+					</button>
+				</div>
+			</div>
+
+			<% if (message_success != "") { %>
+				<div class="alert alert-success">
+					<%= message_success %>
+				</div>
+				<% } %>
+
+				<% if (message_fail != "") { %>
+				<div class="alert alert-danger">
+					<%= message_fail %>
+				</div>
+				<% } %>
+
+				<% if (message_warning != "") { %>
+				<div class="alert alert-warning">
+					<%= message_warning %>
+				</div>
+				<% } %>		
+
+				<div class="form-group">
+					<label for="app">Kelas Dharma/ Sidang Dharma</label>
+					<select id="app" name="app" class="form-control" onchange="getPesertaSidang()">
+						<option value="" disabled selected>-- Pilih Kelas Dharma --</option>
+						<% for(var i=0;i < apps.length;i++) { %>
+						<option value="<%= apps[i].id %>"><%= apps[i].nama_kelas %></option>
+						<% } %>
+					</select>
+				</div>
+
+				<div class="form-group">
+					<h5><u>List Umat</u></h5>
+					<table class="table table-stripped table-bordered table-hover" cellpadding=0 cellspacing=10>
+						<thead>
+							<tr>
+								<th>No Chutao</th>
+								<th>Nama Indonesia</th>
+								<th>Nama Mandarin</th>
+								<th> <input class="form-check-input" type="checkbox" value="" id="ikrar1" name="ikrar1"> Ikrar 1</th>
+								<th> <input class="form-check-input" type="checkbox" value="" id="ikrar2" name="ikrar2"> Ikrar 2</th>
+								<th> <input class="form-check-input" type="checkbox" value="" id="ikrar3" name="ikrar3"> Ikrar 3</th>
+								<th> <input class="form-check-input" type="checkbox" value="" id="ikrar4" name="ikrar4"> Ikrar 4</th>
+								<th> <input class="form-check-input" type="checkbox" value="" id="ikrar5" name="ikrar5"> Ikrar 5</th>
+								<th> <input class="form-check-input" type="checkbox" value="" id="ikrar6" name="ikrar6"> Ikrar 6</th>
+							</tr>
+						</thead>
+						<tbody id="list_quest_body">
+						</tbody>
+						<!-- <tfoot>
+							<tr id="buttonAddQuest" style="cursor: pointer;">
+								<td colspan="5">+ Tambah Umat</td>
+							</tr>
+						</tfoot> -->
+					</table>
+				</div>
+
+				<div id="ikrar-form">
+				
+				</div>
+
+					
+				</form>
+		</div>
+	</div>
+</div>
+
+<%- include('../partial/javascript'); %>
+<script src="/js/tokenfield.min.js"></script>
+<script src="/js/bootstrap-tagsinput.min.js"></script>
+<script type="text/javascript" src="/js/date-picker.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/css/jquery.datepick.css">
+<script type="text/javascript" src="/assets/jquerydatepicker/js/jquery.plugin.js"></script>
+<script type="text/javascript" src="/assets/jquerydatepicker/js/jquery.datepick.js"></script>
+<script>
+	var group_token
+	var phone_token
+	var lengthParam
+	var templateData = null
+	var countPart = 0;
+
+	//add partisipan
+    $("#buttonAddQuest").click(function () {
+        $("#list_quest_body").append(addQuestRow(countPart))
+        countPart++;
+    })
+
+	function addIkrarForm(data){
+		var html = `<div class="form-group">
+					<label>Ikrar Suci</label>
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="ikrar1" name="ikrar1" `+((data.ikrar1 == 1)?"checked":"")
+						+`>
+						<label class="form-check-label" for="ikrar1">
+						Ikrar 1 .............
+						</label>
+					</div>
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="ikrar2" name="ikrar2" `+((data.ikrar2 == 1)?"checked":"")
+						+`>
+						<label class="form-check-label" for="ikrar2">
+						Ikrar 2 .............
+						</label>
+					</div>
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="ikrar3" name="ikrar3" `+((data.ikrar3 == 1)?"checked":"")
+						+`>
+						<label class="form-check-label" for="ikrar3">
+						Ikrar 3 .............
+						</label>
+					</div>
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="ikrar4" name="ikrar4" `+((data.ikrar4 == 1)?"checked":"")
+						+`>
+						<label class="form-check-label" for="ikrar4">
+						Ikrar 4 .............
+						</label>
+					</div>
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="ikrar5" name="ikrar5" `+((data.ikrar5 == 1)?"checked":"")
+						+`>
+						<label class="form-check-label" for="ikrar5">
+						Ikrar 5 .............
+						</label>
+					</div>
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="ikrar6" name="ikrar6" `+((data.ikrar6 == 1)?"checked":"")
+						+`>
+						<label class="form-check-label" for="ikrar6">
+						Ikrar 6 .............
+						</label>
+					</div>
+				</div>`
+		return html
+	}
+
+	function addQuestRow(row_num, data) {
+        var row_id = "participant_row_" + row_num;
+      
+        var html = `<tr id='` + row_id + `'>`
+        html+=`<input type="hidden" name="participant:` + row_num + `:peserta" class="form-control">`
+		
+		// html += `<td><select id="" name="gender:` + row_num + `:type" class="form-control type">`
+		// html += `<option value="M" selected>Pria</option>
+		// 		 <option value="F">Wanita</option>`
+		// html += `</select></td>`
+		html += `<td><input type="text" name="chutao:` + row_num + `:peserta" class="form-control" placeholder="-" value="`+data.no_chutao+`" disabled></td>`
+		html += `<td><input type="text" name="mandarin:` + row_num + `:peserta" class="form-control" placeholder="-" value="`+data.nama_mandarin+`" disabled></td>`
+		html += `<td><input type="text" name="nama:` + row_num + `:peserta" class="form-control" placeholder="-" value="`+data.nama_indo+`" disabled></td>`
+		html += `<td>`
+		html += `<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="ikrar1" name="ikrar1">
+						<label class="form-check-label" for="ikrar1">
+						1
+						</label>
+					</div>`
+		
+					html += `</td>`
+					html += `<td>`
+		html += `<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="ikrar1" name="ikrar1">
+						<label class="form-check-label" for="ikrar1">
+						2
+						</label>
+					</div>`
+		
+					html += `</td>`
+
+					html += `<td>`
+		html += `<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="ikrar1" name="ikrar1">
+						<label class="form-check-label" for="ikrar1">
+						3
+						</label>
+					</div>`
+		
+					html += `</td>`
+
+					html += `<td>`
+		html += `<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="ikrar1" name="ikrar1">
+						<label class="form-check-label" for="ikrar1">
+						4
+						</label>
+					</div>`
+		
+					html += `</td>`
+
+					html += `<td>`
+		html += `<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="ikrar1" name="ikrar1">
+						<label class="form-check-label" for="ikrar1">
+						5
+						</label>
+					</div>`
+		
+					html += `</td>`
+		
+					html += `<td>`
+		html += `<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="ikrar1" name="ikrar1">
+						<label class="form-check-label" for="ikrar1">
+						6
+						</label>
+					</div>`
+		
+					html += `</td>`
+		
+        html+=`</tr>`;
+        return html
+    }
+	
+	function removePart(div){
+        $("#" + div).remove();
+        countPart = countPart - 1
+    }
+	
+
+	$(document).ready(function () {
+		
+	});
+
+	function getPesertaSidang(){
+		console.log($('#app').val())
+		posting({
+                url: "/panels/umat/getpesertasidang",
+                param: {
+					id_kelas: $('#app').val()
+				},
+                done: function (res) {
+					console.log("res",res)
+                    if (res.status == "SUCCESS") {
+						$("#list_quest_body").html("")
+						$('#ikrar-form').html("")
+						//populate the list
+						if (res.data.length > 0) {
+							for(var i=0;i< res.data.length;i++){
+								$("#list_quest_body").append(addQuestRow(i,res.data[i]))
+							}
+							$('#ikrar-form').html(addIkrarForm(res.ikrar))
+						}
+						
+                    }
+                }
+            })
+	}
+
+	function posting(data) {
+		$.ajax({
+			method: "POST",
+			url: data.url,
+			data: data.param
+		}).done(data.done);
+	};
+</script>

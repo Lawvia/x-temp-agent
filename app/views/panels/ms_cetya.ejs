@@ -1,0 +1,440 @@
+<% var css_list = ['/css/tokenfield.css']%>
+<% var js_list=[]%>
+<%- include('../partial/header',{css:css_list, js:js_list}) %>
+<%- include('../partial/navbar',{user:user}) %>
+<style>
+	.switch {
+	position: relative;
+	display: inline-block;
+	width: 60px;
+	height: 34px;
+	}
+	.switch input { 
+	opacity: 0;
+	width: 0;
+	height: 0;
+	}
+
+	.slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	-webkit-transition: .4s;
+	transition: .4s;
+	}
+
+	.slider:before {
+	position: absolute;
+	content: "";
+	height: 26px;
+	width: 26px;
+	left: 4px;
+	bottom: 4px;
+	background-color: white;
+	-webkit-transition: .4s;
+	transition: .4s;
+	}
+
+	input:checked + .slider {
+	background-color: #2196F3;
+	}
+
+	input:focus + .slider {
+	box-shadow: 0 0 1px #2196F3;
+	}
+
+	input:checked + .slider:before {
+	-webkit-transform: translateX(26px);
+	-ms-transform: translateX(26px);
+	transform: translateX(26px);
+	}
+
+	/* Rounded sliders */
+	.slider.round {
+	border-radius: 34px;
+	}
+
+	.slider.round:before {
+	border-radius: 50%;
+	}
+
+	.dtpicker-button{
+		background-color:#ac2126 !important;
+		border-radius: 16px;
+	}
+</style>
+<link rel="stylesheet" href="/css/bootstrap-tagsinput.css">
+<link rel="stylesheet" type="text/css" href="/css/date-picker.css" />
+
+<div class="wrapper" style="margin-top:56px">
+	<%- include('../partial/sidebar', {active:"ms_cetya", parent:"panel", user:user}) %>
+	<div id="content" class="container-fluid">
+		<div id="background-content">
+			<form id="formAddGroup" method="POST" action="/panels/cetya/input">
+			<div class="card-header py-3 d-flex" style="justify-content: space-between;margin-bottom: 10px;">
+				<div>
+					<h4 class="h4 mb-2" style="color: #ac2126; font-weight: bold;">Data Cetya</h4>
+					<p class="mb-4">Silahkan ubah field yang dibutuhkan lalu klik "submit update"</p>
+				</div>
+				<div style="align-self: center;">
+					<button id="btnSync" type="submit" class="btn btn-info btn-md" title='Sync'>
+						<div id="spinnerLoad" class="spinner-border text-light" style="display: none;" role="status"></div>
+						<div id="templateText"><i class="fa fa-hourglass-start"></i>&nbsp; Submit</div>						
+					</button>
+				</div>
+			</div>
+
+			<% if (message_success != "") { %>
+				<div class="alert alert-success">
+					<%= message_success %>
+				</div>
+				<% } %>
+
+				<% if (message_fail != "") { %>
+				<div class="alert alert-danger">
+					<%= message_fail %>
+				</div>
+				<% } %>
+
+				<% if (message_warning != "") { %>
+				<div class="alert alert-warning">
+					<%= message_warning %>
+				</div>
+				<% } %>		
+
+				<div class="form-group" style="display:none">
+					<input type="hidden" name="id_cetya" id="id_cetya" value="<%= result.id %>" />
+				</div>
+
+					<div class="form-group">
+						
+						<div class="row">
+						<div class="col-6">
+							<label for="umat1">Nama Umat 1</label>
+						<select id="umat1" name="umat1" class="form-control">
+							<% for(var i=0;i < pengajak.length;i++) { %>
+							<option value="<%= pengajak[i].id %>" <%- pengajak[i].id == result.id_umat1? "selected": "" %>><%= pengajak[i].nama_mandarin + "-" + pengajak[i].nama_indo + " (" + (pengajak[i].no_chutao).substring(2) + ")" %></option>
+							<% } %>
+						</select></div>
+						<div class="col-6">
+							<label for="umat2">Nama Umat 2</label>
+							<select id="umat2" name="umat2" class="form-control">
+								<option value="0" selected>--Pilih--</option>
+								<% for(var i=0;i < pengajak.length;i++) { %>
+								<option value="<%= pengajak[i].id %>" <%- pengajak[i].id == result.id_umat2? "selected": "" %>><%= pengajak[i].nama_mandarin + "-" + pengajak[i].nama_indo + " (" + (pengajak[i].no_chutao).substring(2) + ")" %></option>
+								<% } %>
+							</select>
+						</div>
+						</div>
+					</div>
+
+					<div class="form-group">
+                        <label for="title">Nomor Kontak Aktif</label>
+                        <input type="text" id="no_kontak" class="form-control" name="no_kontak" placeholder="+62" value="<%= result.no_kontak %>" />
+                    </div>
+					<div class="form-group">
+                        <label for="title">Alamat Cetya</label>
+                        <textarea id="alamat" class="form-control" name="alamat" placeholder="Alamat"><%= result.alamat %></textarea>
+                    </div>
+					<div class="form-group">
+                        <label for="title">Nama Cetya</label>
+                        <input type="text" id="nama_cetya" class="form-control" name="nama_cetya" placeholder="Masukan nama" value="<%= result.nama_cetya %>"/>
+                    </div>
+
+					<div class="form-group">
+						<label class="my-1 mr-2 text-white-shadow">Tanggal AnThan: </label>
+						<input type="text" autocomplete="off" id="select_date_chutao" class="form-control my-1 mr-2"
+							name="tanggal_anthan" placeholder="yyyy - mm - dd" value="<%= result.tanggal_anthan %>"/>
+					</div>
+
+					<div class="form-group">
+						<div class="row">
+							<div class="col-6">
+								<label for="nonactive"><b>Nonaktif? : </b></label>&nbsp;
+							<label class="switch">
+								<input id="nonactive" name="active" type="checkbox">
+								<span class="slider round"></span>
+							</label>
+							</div>
+							<div class="col-6" style="display: none;">
+								<label for="meninggal"><b>Meninggal? : </b></label>&nbsp;
+							<label class="switch">
+								<input id="meninggal" name="meninggal" type="checkbox" checked>
+								<span class="slider round"></span>
+							</label>
+							</div>
+						</div>
+					</div>
+					
+
+					<div class="form-group" style="display:none" id="scheduleList">
+                        <label for="input_schedule_notification"> Schedule Time</label>
+                        <input id="input_schedule_notification" type="text" data-field="datetime" class="form-control" readonly>
+                        <div id="notification_schedule"></div>
+                    </div>
+				</form>
+		</div>
+	</div>
+</div>
+
+<%- include('../partial/javascript'); %>
+<script src="/js/tokenfield.min.js"></script>
+<script src="/js/bootstrap-tagsinput.min.js"></script>
+<script type="text/javascript" src="/js/date-picker.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/css/jquery.datepick.css">
+<script type="text/javascript" src="/assets/jquerydatepicker/js/jquery.plugin.js"></script>
+<script type="text/javascript" src="/assets/jquerydatepicker/js/jquery.datepick.js"></script>
+<script>
+	var group_token
+	var phone_token
+	var lengthParam
+	var templateData = null
+
+	$('#umat1').chosen({
+		width:'100%'
+	});
+
+	$('#umat2').chosen({
+		width:'100%'
+	});
+
+	function showFreeboxPengajak() {
+		var select_status = $("#showPengajak").is(":checked");
+		if (select_status) {
+			$('#pengajakFree').hide();
+			$('#pengajak').show();
+			$('#pengajakFree').val("");
+		} else {
+			$('#pengajak').hide();
+			$('#pengajakFree').show();
+			$('#pengajakFree').val("")
+		}
+	};
+
+	$('#select_date').datepick({
+        dateFormat: 'yyyy-mm-dd',
+		onSelect: function(dateText) {
+        console.log("Selected date: " + dateText + "; input's current value: " + this.value);
+		calculateAge()
+   		}
+	});
+
+	$('#select_date_chutao').datepick({
+        dateFormat: 'yyyy-mm-dd'
+	});
+
+	function calculateAge () {
+		console.log("calc")
+		var years = moment().diff($("#select_date").val(), 'years');
+		$("#age_counter").val(years+1)
+		return years+1
+	}
+
+	function showTextBox() {
+		var select_status = $("#toGroup").is(":checked");
+		if (select_status) {
+			$('#groupList').show();
+			$('#phoneList').hide();
+
+			$('#phone').val("");
+			phone_token.emptyItems();
+		} else {
+			$('#groupList').hide();
+			$('#phoneList').show();
+
+			$('#user_group').val("")
+			group_token.emptyItems();
+		}
+	};
+
+	function showTime() {
+		var select_status = $("#sendNow").is(":checked");
+		if (select_status) {
+			$('#scheduleList').hide();
+			$('#input_schedule_notification').val("");
+		} else {
+			$('#scheduleList').show();
+			$('#input_schedule_notification').val("")
+		}
+	};
+
+	function showTempBody() {
+		var select_status = $("#template").val();
+		var split = select_status.split(":");
+
+		//check for required param
+		if (templateData){
+			if (templateData[split[1]].structure.includes("{{")){
+				$('#paramList').show();
+				// $("#param").val("");
+
+				lengthParam = (templateData[split[1]].structure.match(new RegExp("{{", "g")) || []).length
+				console.log("count param: ",lengthParam)
+			}else{
+				$('#paramList').hide();
+				lengthParam = 0;
+				// $("#param").val("");
+			}	
+		}
+
+		var data
+		if (templateData) data = JSON.parse(templateData[split[1]].structure)
+		var res = "<div class='card-header'><ol>"
+		for(i=0;i<Object.keys(data).length;i++){
+			if(Object.keys(data)[i] == "header"){
+				
+			}else{
+				res += "<li><b>"+Object.keys(data)[i]+"</b>"+" = "+data[Object.keys(data)[i]]+"</li>"
+			}       
+		}
+		res += "</ol></div>"
+		$("#tempGuide").html(res);
+		$("#templateBody").show();
+	};
+
+	$(document).ready(function () {
+		$("#notification_schedule").DateTimePicker({
+            dateTimeFormat: "yyyy-MM-dd HH:mm:ss"
+        });
+		
+		//calculate age
+		
+		showTextBox();
+		showTime();
+	});
+
+	function posting(data) {
+		$.ajax({
+			method: "POST",
+			url: data.url,
+			data: data.param
+		}).done(data.done);
+	};
+
+	function check_email(){
+            console.log($("#param").val())
+
+            var reg = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+            var curremail = $("#param").val();
+            var email = curremail.split(',');
+			console.log("length ",lengthParam)
+			if (email.length <= 0 || email.length < lengthParam || email.length > lengthParam){
+				console.log("invalid count")
+				$('#emailHint').html('Please match the param count on the body!');
+				$("#param").removeClass("valid").addClass("invalid")
+				return false;
+			}
+            var checkemail = email[email.length-1];
+            console.log(email.length, checkemail)
+            console.log("curremail" , curremail)
+            if(curremail != ""){
+               
+                console.log("check space:", checkemail[checkemail.length-1])
+                if(checkemail[checkemail.length-1] !==  " " && !curremail.includes(' ')){
+					console.log("check sp")
+                    $("#param").removeClass("invalid").addClass("valid")
+                    $('#emailHint').html('');  
+                }
+            }else{
+                $('#emailHint').html('Is Empty!');
+				$("#param").removeClass("valid").addClass("invalid")
+				return false;   
+            }
+
+            var form_data=$("#formSendTemplate").serializeArray();
+            var error_free=true;
+            for (var input in form_data){
+                var element=$(form_data[input]['param']);
+                var valid=element.hasClass("valid");
+                var error_element=$("span", element.parent());
+                if (!valid){
+                    error_element.removeClass("error").addClass("error_show"); 
+                    error_free=false;
+                }
+                else{
+                    error_element.removeClass("error_show").addClass("error");
+                }
+            }
+    }
+  
+
+	function do_empty_field() {
+		if ($("#template").val() == "" || $("#template").val() == null){
+			alert("select a template");
+			return
+		}
+		if (lengthParam > 0) {
+			var chk = check_email();
+			if (chk == false){
+				alert("Please check parameter!")
+				return
+			} 
+		}
+
+		var items_group = []
+		var items_phone = []
+
+		for (var i = 0; i < group_token.getItems().length; i++) {
+			items_group.push(group_token.getItems()[i].id)
+		}
+		for (var i = 0; i < phone_token.getItems().length; i++) {
+			items_phone.push(phone_token.getItems()[i].id)
+		}
+
+		console.log("item pone grup", items_group, items_phone)
+		if (items_phone.length <= 0 && items_group.length <= 0){
+			alert("Input a receiver first!")
+			return
+		}
+
+		var select_status = $("#sendNow").is(":checked");
+		var scheduleForm = $('#input_schedule_notification').val()
+
+		if (!select_status){
+			if (scheduleForm == "") {
+				alert("Please input schedule value!")
+				return;
+			}
+			var dateNow = new Date();
+    		var selectedDate = new Date(scheduleForm);
+			if (selectedDate < dateNow) {
+				alert("Schedule value must bigger than current date")
+				return;
+			}
+		}
+		// passed the validation
+		$("#templateText").hide();
+		$("#spinnerLoad").show();
+
+		$("#btnSync").prop("disabled", true);
+
+		$.ajax({
+			method: "POST",
+			url: "/panels/compose/send_template",
+			data: {
+				app: $("#app").val(),
+				scene: $("#scene").val(),
+				toGroup:  $("#toGroup").is(":checked"),
+				items_group: items_group,
+				items_phone: items_phone,
+				template: $("#template").val(),
+				sendNow: select_status,
+				schedule:  moment(scheduleForm).format('YYYY-MM-DD HH:mm:ss'),
+				lengthParam: lengthParam,
+				param: $("#param").val()
+			}
+		}).done(function (res){
+			console.log(res)
+			alert(res.message);
+			window.location.href = "/panels/messages";
+			return
+		})
+
+	}
+
+</script>

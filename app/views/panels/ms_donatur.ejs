@@ -1,0 +1,247 @@
+<% var css_list = ['/css/tokenfield.css']%>
+<% var js_list=[]%>
+<%- include('../partial/header',{css:css_list, js:js_list}) %>
+<%- include('../partial/navbar',{user:user}) %>
+<style>
+	.switch {
+	position: relative;
+	display: inline-block;
+	width: 60px;
+	height: 34px;
+	}
+	.switch input { 
+	opacity: 0;
+	width: 0;
+	height: 0;
+	}
+
+	.slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	-webkit-transition: .4s;
+	transition: .4s;
+	}
+
+	.slider:before {
+	position: absolute;
+	content: "";
+	height: 26px;
+	width: 26px;
+	left: 4px;
+	bottom: 4px;
+	background-color: white;
+	-webkit-transition: .4s;
+	transition: .4s;
+	}
+
+	input:checked + .slider {
+	background-color: #2196F3;
+	}
+
+	input:focus + .slider {
+	box-shadow: 0 0 1px #2196F3;
+	}
+
+	input:checked + .slider:before {
+	-webkit-transform: translateX(26px);
+	-ms-transform: translateX(26px);
+	transform: translateX(26px);
+	}
+
+	/* Rounded sliders */
+	.slider.round {
+	border-radius: 34px;
+	}
+
+	.slider.round:before {
+	border-radius: 50%;
+	}
+
+	.dtpicker-button{
+		background-color:#ac2126 !important;
+		border-radius: 16px;
+	}
+</style>
+<link rel="stylesheet" href="/css/bootstrap-tagsinput.css">
+<link rel="stylesheet" type="text/css" href="/css/date-picker.css" />
+
+<div class="wrapper" style="margin-top:56px">
+	<%- include('../partial/sidebar', {active:"kelas", parent:"dharma", user:user}) %>
+	<div id="content" class="container-fluid">
+		<div id="background-content">
+			<form id="formSendTemplate">
+			<div class="card-header py-3 d-flex" style="justify-content: space-between;margin-bottom: 10px;">
+				<div>
+					<h4 class="h4 mb-2" style="color: #ac2126; font-weight: bold;">Data Donatur</h4>
+					<p class="mb-4">Kelas Dharma: <%= result.nama_kelas %> / <%= result.tanggal_kelas%></p>
+				</div>
+				<div style="align-self: center;">
+					<button type="button" class="btn btn-success btn-md"
+						onclick='do_download_report(<%= result.id%>)'>
+						<i class="fa fa-file-excel"></i>&nbsp; Download Excel
+					</button>
+					<button id="btnSync" type="button" class="btn btn-info btn-md"
+						onclick='do_empty_field()' title='Sync'>
+						<div id="spinnerLoad" class="spinner-border text-light" style="display: none;" role="status"></div>
+						<div id="templateText"><i class="fa fa-hourglass-start"></i>&nbsp; Submit</div>						
+					</button>
+				</div>
+			</div>
+
+			<% if (message_success != "") { %>
+				<div class="alert alert-success">
+					<%= message_success %>
+				</div>
+				<% } %>
+
+				<% if (message_fail != "") { %>
+				<div class="alert alert-danger">
+					<%= message_fail %>
+				</div>
+				<% } %>
+
+				<% if (message_warning != "") { %>
+				<div class="alert alert-warning">
+					<%= message_warning %>
+				</div>
+				<% } %>		
+
+				<ul class="nav nav-tabs">
+					<li class="nav-item">
+					  <a class="nav-link"  href="/panels/kelas/peserta/<%= result.id%>">Peserta</a>
+					</li>
+					<li class="nav-item">
+					  <a class="nav-link"  href="/panels/kelas/pengabdi/<%= result.id%>">Pengabdi</a>
+					</li>
+					<li class="nav-item">
+					  <a class="nav-link active" aria-current="page" href="#">Donatur</a>
+					</li>
+					<li class="nav-item">
+					  <a class="nav-link" href="/panels/kelas/sumbangan/<%= result.id%>">Sumbangan</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/panels/kelas/biaya/<%= result.id%>">Biaya</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/panels/kelas/keuangan/<%= result.id%>">Keuangan</a>
+					</li>
+				  </ul>
+
+
+				<div class="form-group">	
+					<table class="table table-stripped table-bordered table-hover" cellpadding=0 cellspacing=10>
+						<thead>
+							<tr>
+								<th>Donatur</th>
+								<th>Sumbangan</th>
+								<th>Cara Bayar</th>
+								<th>Action</th>
+							</tr>
+						</thead>
+						<tbody id="list_quest_body">
+						</tbody>
+						<tfoot>
+							<tr id="buttonAddQuest" style="cursor: pointer;">
+								<td colspan="5">+ Tambah Donatur</td>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+
+					
+				</form>
+		</div>
+	</div>
+</div>
+
+<%- include('../partial/javascript'); %>
+<script src="/js/tokenfield.min.js"></script>
+<script src="/js/bootstrap-tagsinput.min.js"></script>
+<script type="text/javascript" src="/js/date-picker.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/css/jquery.datepick.css">
+<script type="text/javascript" src="/assets/jquerydatepicker/js/jquery.plugin.js"></script>
+<script type="text/javascript" src="/assets/jquerydatepicker/js/jquery.datepick.js"></script>
+<script>
+	var group_token
+	var phone_token
+	var lengthParam
+	var templateData = null
+	var countPart = 0;
+	var peserta = <%- JSON.stringify(pengajak) %>;
+	var list = <%- JSON.stringify(donatur) %>;
+
+	//add partisipan
+    $("#buttonAddQuest").click(function () {
+		var data_dum = {
+			id: "",
+			nama_donatur: "",
+			sumbangan: "",
+			cara_bayar: ""
+		}
+        $("#list_quest_body").append(addQuestRow(countPart, data_dum))
+        countPart++;
+    })
+
+	function addQuestRow(row_num, data) {
+        var row_id = "participant_row_" + row_num;
+      
+        var html = `<tr id='` + row_id + `'>`
+        html+=`<input type="hidden" name="participant:` + row_num + `:peserta" class="form-control">`
+		html += `<td><input type="text" name="nama:` + row_num + `:peserta" class="form-control" placeholder="Nama" value="`+data.nama_donatur+`"></td>`
+		html += `<td><input type="text" name="sumbangan:` + row_num + `:peserta" class="form-control" placeholder="Rp." value="`+addCommas(data.sumbangan)+`" onchange="this.value=addCommas(this.value)"></td>`
+		
+		html += `<td><select id="" name="payoption:` + row_num + `:type" class="form-control type">`
+		html += `<option value="" selected disabled>Pilih</option>
+						<option value="cash" `+(("cash" == data.cara_bayar)?"selected":"")+`>Cash</option>
+						<option value="transfer" `+(("transfer" == data.cara_bayar)?"selected":"")+`>Transfer</option>
+						<option value="qris" `+(("qris" == data.cara_bayar)?"selected":"")+`>QRIS</option>`
+		html += `</select></td>`
+      html+=`<td><button type="submit" id="bttn_delete_row" onclick="removePart('` + row_id + `')" class="btn btn-danger">Delete</button></td>`
+        html+=`</tr>`;
+        return html
+    }
+
+	function removePart(div){
+        $("#" + div).remove();
+        countPart = countPart - 1
+    }
+
+	function addCommas(nStr)
+	{
+		nStr += '';
+		x = nStr.split('.');
+		x1 = x[0];
+		x2 = x.length > 1 ? '.' + x[1] : '';
+		var rgx = /(\d+)(\d{3})/;
+		while (rgx.test(x1)) {
+			x1 = x1.replace(rgx, '$1' + ',' + '$2');
+		}
+		return x1 + x2;
+	}
+	
+
+	$(document).ready(function () {
+		if (list.length > 0){
+			//add initial data
+			for(var i = 0; i< list.length; i++){
+				$("#list_quest_body").append(addQuestRow(countPart, list[i]))
+        		countPart++;
+			}
+
+		}
+	});
+
+	function posting(data) {
+		$.ajax({
+			method: "POST",
+			url: data.url,
+			data: data.param
+		}).done(data.done);
+	};
+</script>

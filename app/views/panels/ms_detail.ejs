@@ -1,0 +1,660 @@
+<% var css_list = ['/css/tokenfield.css']%>
+<% var js_list=[]%>
+<%- include('../partial/header',{css:css_list, js:js_list}) %>
+<%- include('../partial/navbar',{user:user}) %>
+<style>
+	.switch {
+	position: relative;
+	display: inline-block;
+	width: 60px;
+	height: 34px;
+	}
+	.switch input { 
+	opacity: 0;
+	width: 0;
+	height: 0;
+	}
+
+	.slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	-webkit-transition: .4s;
+	transition: .4s;
+	}
+
+	.slider:before {
+	position: absolute;
+	content: "";
+	height: 26px;
+	width: 26px;
+	left: 4px;
+	bottom: 4px;
+	background-color: white;
+	-webkit-transition: .4s;
+	transition: .4s;
+	}
+
+	input:checked + .slider {
+	background-color: #2196F3;
+	}
+
+	input:focus + .slider {
+	box-shadow: 0 0 1px #2196F3;
+	}
+
+	input:checked + .slider:before {
+	-webkit-transform: translateX(26px);
+	-ms-transform: translateX(26px);
+	transform: translateX(26px);
+	}
+
+	/* Rounded sliders */
+	.slider.round {
+	border-radius: 34px;
+	}
+
+	.slider.round:before {
+	border-radius: 50%;
+	}
+
+	.dtpicker-button{
+		background-color:#ac2126 !important;
+		border-radius: 16px;
+	}
+</style>
+<link rel="stylesheet" href="/css/bootstrap-tagsinput.css">
+<link rel="stylesheet" type="text/css" href="/css/date-picker.css" />
+
+<div class="wrapper" style="margin-top:56px">
+	<%- include('../partial/sidebar', {active:"ms_umat", parent:"panel", user:user}) %>
+	<div id="content" class="container-fluid">
+		<div id="background-content">
+			<form id="formSendTemplate">
+			<div class="card-header py-3 d-flex" style="justify-content: space-between;margin-bottom: 10px;">
+				<div>
+					<h4 class="h4 mb-2" style="color: #ac2126; font-weight: bold;">Detail Umat&nbsp;<i class="fas fa-paper-plane"></i></h4>
+					<p class="mb-4">Silahkan ubah field yang dibutuhkan lalu klik "submit update"</p>
+				</div>
+				<div style="align-self: center;">
+					<button id="btnSync" type="button" class="btn btn-info btn-md"
+						onclick='do_empty_field()' title='Sync'>
+						<div id="spinnerLoad" class="spinner-border text-light" style="display: none;" role="status"></div>
+						<div id="templateText"><i class="fa fa-hourglass-start"></i>&nbsp; Submit</div>						
+					</button>
+				</div>
+			</div>
+
+			<% if (message_success != "") { %>
+				<div class="alert alert-success">
+					<%= message_success %>
+				</div>
+				<% } %>
+
+				<% if (message_fail != "") { %>
+				<div class="alert alert-danger">
+					<%= message_fail %>
+				</div>
+				<% } %>
+
+				<% if (message_warning != "") { %>
+				<div class="alert alert-warning">
+					<%= message_warning %>
+				</div>
+				<% } %>
+			
+				
+					<div class="form-group">
+						<label for="app">Vihara</label>
+						<select id="app" name="app" class="form-control">
+							<% for(var i=0;i < apps.length;i++) { %>
+							<option value="<%= apps[i].id %>" <%- apps[i].id == result.id_vihara? "selected": "" %>><%= apps[i].name %></option>
+							<% } %>
+						</select>
+					</div>
+					<div class="form-group">
+                        <label for="title">Nomor Chutao</label>
+                        <input type="text" id="no_chutao" class="form-control" name="no_chutao" placeholder="nomor chutao" value="<%= ((result.no_chutao).split('-'))[1] %>" />
+                    </div>
+					<div class="form-group">
+                        <label for="title">Nama Mandarin</label>
+                        <input type="text" id="nama_mandarin" class="form-control" name="nama_mandarin" placeholder="nama mandarin" value="<%= result.nama_mandarin %>" />
+                    </div>
+					<div class="form-group">
+                        <label for="title">Nama Indonesia</label>
+                        <input type="text" id="nama_indo" class="form-control" name="nama_indo" placeholder="nama indo" value="<%= result.nama_indo %>" />
+                    </div>
+					
+					<div class="form-group">
+						<label for="gender">Gender</label>
+						<select id="gender" name="gender" class="form-control">
+							<% for(var i=0;i < gender.length;i++) { %>
+								<option value="<%= gender[i].id %>" <%- gender[i].id == result.gender? "selected": "" %>><%= gender[i].name %></option>
+							<% } %>
+						</select>
+					</div>
+
+					<div class="form-group">
+                        <label for="title">Nomor Telepon</label>
+                        <input type="text" id="phone" class="form-control" name="phone" placeholder="nomor hp" value="<%= result.phone %>" />
+                    </div>
+					<div class="form-group">
+                        <label for="title">Nomor Telepon 2</label>
+                        <input type="text" id="phone2" class="form-control" name="phone2" placeholder="nomor hp backup" value="<%= result.phone_2 %>" />
+                    </div>
+					<div class="form-group">
+                        <label for="title">Alamat</label>
+                        <textarea id="alamat" class="form-control" name="alamat" placeholder="Alamat Vihara"><%= result.alamat %></textarea>
+                    </div>
+					
+					<div class="row">
+						<div class="col-md">
+							<div class="form-group">
+								<label class="my-1 mr-2 text-white-shadow">Tanggal: </label>
+								<input type="text" autocomplete="off" id="select_date" class="form-control my-1 mr-2"
+									name="start_time" value="<%- result.dob %>" placeholder="yyyy - mm - dd" onchange="calculateAge()"/>
+							</div>
+						</div>
+						<div class="col-md">
+							<div class="form-group">
+								<label class="my-1 mr-2 text-white-shadow">Umur: </label>
+								<input type="text" class="form-control my-1 mr-2"
+									id="age_counter" value="26" disabled />
+							</div>
+						</div>
+						<div class="col-md">
+							<div class="form-group">
+								<label class="my-1 mr-2 text-white-shadow">Umur Chutao: </label>
+								<input type="text" class="form-control my-1 mr-2"
+									id="chutao_counter" value="26" disabled />
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label for="pengajak">Pengajak</label>
+						<div class="row">
+						<div class="col-lg">
+						<select id="pengajak" name="pengajak" class="form-control">
+							<% var umat_ajak = 0 %>
+							<% for(var i=0;i < pengajak.length;i++) { %>
+								<% if (pengajak[i].nama_mandarin == result.id_pengajak){ umat_ajak = 1} %>
+							<option value="<%= pengajak[i].id %>" <%- pengajak[i].nama_mandarin == result.id_pengajak? "selected": "" %>><%= pengajak[i].nama_mandarin + "-" + pengajak[i].nama_indo %></option>
+							<% } %>
+						</select>
+						<input type="text" id="pengajakFree" class="form-control" name="pengajakFree" placeholder="Nama Pengajak" <%- umat_ajak == 1? "style='display: none;'": "" %> value="<%- result.id_pengajak %>"  />
+						</div>
+						<div class="col-sm">
+							<label for="showPengajak"><b>Umat Terdaftar : </b></label>&nbsp;
+							<label class="switch">
+								<input id="showPengajak" type="checkbox" <%- umat_ajak == 1?"checked":"" %> onchange="showFreeboxPengajak()">
+								<span class="slider round"></span>
+							</label>
+						</div>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label for="penjamin">Penjamin</label>
+						<div class="row">
+							<div class="col-lg">
+						<select id="penjamin" name="penjamin" class="form-control">
+							<% var umat = 0 %>
+							<% for(var i=0;i < pengajak.length;i++) { %>
+								<% if (pengajak[i].nama_mandarin == result.id_penjamin){ umat = 1} %>
+							<option value="<%= pengajak[i].id %>" <%- pengajak[i].nama_mandarin == result.id_penjamin? "selected": "" %>><%= pengajak[i].nama_mandarin + "-" + pengajak[i].nama_indo %></option>
+							<% } %>
+						</select>
+						<input type="text" id="penjaminFree" class="form-control" name="penjaminFree" placeholder="Nama Penjamin" <%- umat == 1? "style='display: none;'": "" %> value="<%- result.id_penjamin %>" />
+						</div>
+						<div class="col-sm">
+							<label for="showPenjamin"><b>Umat Terdaftar : </b></label>&nbsp;
+							<label class="switch">
+								<input id="showPenjamin" type="checkbox" <%- umat == 1?"checked":"" %> onchange="showFreeboxPenjamin()">
+								<span class="slider round"></span>
+							</label>
+						</div>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label for="pendidikan">Pendidikan</label>
+						<select id="pendidikan" name="pendidikan" class="form-control">
+							<% for(var i=0;i < pendidikan.length;i++) { %>
+								<option value="<%= pendidikan[i].id %>" <%- pendidikan[i].id == result.id_pendidikan? "selected": "" %>><%= pendidikan[i].name %></option>
+							<% } %>
+						</select>
+					</div>
+
+					<div class="form-group">
+						<label for="pandita">Pandita</label>
+						<select id="pandita" name="pandita" class="form-control">
+							<% for(var i=0;i < pandita.length;i++) { %>
+								<option value="<%= pandita[i].id %>" <%- pandita[i].id == result.pandita? "selected": "" %>><%= pandita[i].name %></option>
+							<% } %>
+						</select>
+					</div>
+
+					<div class="row">
+						<div class="col-4">
+							<div class="form-group">
+								<label class="my-1 mr-2 text-white-shadow">Tahun Mandarin: </label>
+								<select id="tahun" name="tahun" class="form-control">
+									<% for(var i=0;i < tahun.length;i++) { %>
+									<option value="<%= tahun[i].id %>" <%- tahun[i].id == result.id_tahun? "selected": "" %>><%= tahun[i].tahun %></option>
+									<% } %>
+								</select>
+							</div>
+						</div>
+						<div class="col-4">
+							<div class="form-group">
+								<label class="my-1 mr-2 text-white-shadow">Tanggal ChuTao: </label>
+								<input type="text" autocomplete="off" id="select_date_chutao" class="form-control my-1 mr-2"
+									name="start_time" value="<%- result.tanggal_chutao %>" placeholder="yyyy - mm - dd"/>
+							</div>
+						</div>
+						<div class="col-4">
+							<div class="form-group">
+								<label class="my-1 mr-2 text-white-shadow">Waktu Mandarin: </label>
+								<select id="waktu" name="waktu" class="form-control">
+									<% for(var i=0;i < waktu.length;i++) { %>
+									<option value="<%= waktu[i].id %>" <%- waktu[i].id == result.id_waktu? "selected": "" %>><%= waktu[i].waktu %></option>
+									<% } %>
+								</select>
+							</div>
+						</div>
+					</div>
+
+
+					<div class="form-group">
+                        <label for="title">Uang Jasa Pahala</label>
+                        <input type="text" id="pahala" class="form-control" name="pahala" placeholder="Rp. 0" value="<%- result.uang_jasa %>" />
+                    </div>
+					<div class="form-group">
+                        <label for="title">Catatan</label>
+                        <textarea id="note" class="form-control" name="note" placeholder="Catatan"><%- result.catatan %></textarea>
+                    </div>
+
+					<div class="form-group">
+						<div class="row">
+							<div class="col-6">
+								<label for="unfound"><b>Unfound? : </b></label>&nbsp;
+							<label class="switch">
+								<input id="unfound" name="unfound" type="checkbox">
+								<span class="slider round"></span>
+							</label>
+							</div>
+							<div class="col-6">
+								<label for="meninggal"><b>Meninggal? : </b></label>&nbsp;
+							<label class="switch">
+								<input id="meninggal" name="meninggal" type="checkbox" <% result.is_alive? "": "checked" %>>
+								<span class="slider round"></span>
+							</label>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Ikrar Suci</label>
+						<% if(ikrar){ %>
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" value="" id="ikrar1" name="ikrar1" <%- (ikrar.ikrar1 == 1)?'checked':'' %>>
+							<label class="form-check-label" for="ikrar1">
+							Ikrar 1 .............
+							</label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" value="" id="ikrar2" name="ikrar2" <%- (ikrar.ikrar2 == 1)?'checked':'' %>>
+							<label class="form-check-label" for="ikrar2">
+							Ikrar 2 .............
+							</label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" value="" id="ikrar3" name="ikrar3" <%- (ikrar.ikrar3 == 1)?'checked':'' %>>
+							<label class="form-check-label" for="ikrar3">
+							Ikrar 3 .............
+							</label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" value="" id="ikrar4" name="ikrar4" <%- (ikrar.ikrar4 == 1)?'checked':'' %>>
+							<label class="form-check-label" for="ikrar4">
+							Ikrar 4 .............
+							</label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" value="" id="ikrar5" name="ikrar5" <%- (ikrar.ikrar5 == 1)?'checked':'' %>>
+							<label class="form-check-label" for="ikrar5">
+							Ikrar 5 .............
+							</label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" value="" id="ikrar6" name="ikrar6" <%- (ikrar.ikrar6 == 1)?'checked':'' %>>
+							<label class="form-check-label" for="ikrar6">
+							Ikrar 6 .............
+							</label>
+						</div>
+						<% }else{ %>
+							<p>Belum pernah mengikuti Sidang Dharma
+						<% } %>
+					</div>
+					<% if (kelas.length > 0){ %>
+					<div class="form-group">
+                        <label for="title">Kelas Dharma</label>
+                        <textarea id="kelas" class="form-control" name="note" placeholder="kelas dharma yang diikuti" disabled><% for(var i=0; i< kelas.length; i++){ %> <%- kelas[i].nama_kelas %> ( <%- kelas[i].tanggal_kelas %> )&#13;&#10;<% } %></textarea>
+                    </div>
+					<% } %>
+					
+
+					<div class="form-group" style="display:none" id="scheduleList">
+                        <label for="input_schedule_notification"> Schedule Time</label>
+                        <input id="input_schedule_notification" type="text" data-field="datetime" class="form-control" readonly>
+                        <div id="notification_schedule"></div>
+                    </div>
+				</form>
+		</div>
+	</div>
+</div>
+
+<%- include('../partial/javascript'); %>
+<script src="/js/tokenfield.min.js"></script>
+<script src="/js/bootstrap-tagsinput.min.js"></script>
+<script type="text/javascript" src="/js/date-picker.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/css/jquery.datepick.css">
+<script type="text/javascript" src="/assets/jquerydatepicker/js/jquery.plugin.js"></script>
+<script type="text/javascript" src="/assets/jquerydatepicker/js/jquery.datepick.js"></script>
+<script>
+	var group_token
+	var phone_token
+	var lengthParam
+	var templateData = null
+
+	function addCommas(nStr)
+	{
+		nStr += '';
+		x = nStr.split('.');
+		x1 = x[0];
+		x2 = x.length > 1 ? '.' + x[1] : '';
+		var rgx = /(\d+)(\d{3})/;
+		while (rgx.test(x1)) {
+			x1 = x1.replace(rgx, '$1' + ',' + '$2');
+		}
+		return x1 + x2;
+	}
+
+	$('#pengajak').chosen({
+		width:'100%'
+	});
+
+	$('#penjamin').chosen({
+		width:'100%'
+	});
+
+	$('#pandita').chosen({
+		width:'100%'
+	});
+
+	function showFreeboxPengajak() {
+		var select_status = $("#showPengajak").is(":checked");
+		if (select_status) {
+			$('#pengajakFree').hide();
+			$('#pengajak_chosen').show();
+			// $('#pengajakFree').val("");
+		} else {
+			$('#pengajak_chosen').hide();
+			$('#pengajakFree').show();
+			// $('#pengajakFree').val("")
+		}
+	};
+
+	function showFreeboxPenjamin() {
+		var select_status = $("#showPenjamin").is(":checked");
+		if (select_status) {
+			$('#penjaminFree').hide();
+			$('#penjamin_chosen').show();
+			// $('#penjaminFree').val("");
+		} else {
+			$('#penjamin_chosen').hide();
+			$('#penjaminFree').show();
+			// $('#penjaminFree').val("")
+		}
+	};
+
+	$('#select_date').datepick({
+        dateFormat: 'yyyy-mm-dd',
+		onSelect: function(dateText) {
+        console.log("Selected date: " + dateText + "; input's current value: " + this.value);
+		calculateAge()
+   		}
+	});
+
+	$('#select_date_chutao').datepick({
+        dateFormat: 'yyyy-mm-dd'
+	});
+
+	function calculateAge () {
+		console.log("calc")
+		var years = moment().diff($("#select_date").val(), 'years');
+		var yearsTao = moment().diff($("#select_date_chutao").val(), 'years');
+
+		$("#age_counter").val(years+1)
+		$("#chutao_counter").val(yearsTao+1)
+		return years+1
+	}
+
+	function showTextBox() {
+		var select_status = $("#toGroup").is(":checked");
+		if (select_status) {
+			$('#groupList').show();
+			$('#phoneList').hide();
+
+			$('#phone').val("");
+			phone_token.emptyItems();
+		} else {
+			$('#groupList').hide();
+			$('#phoneList').show();
+
+			$('#user_group').val("")
+			group_token.emptyItems();
+		}
+	};
+
+	function showTime() {
+		var select_status = $("#sendNow").is(":checked");
+		if (select_status) {
+			$('#scheduleList').hide();
+			$('#input_schedule_notification').val("");
+		} else {
+			$('#scheduleList').show();
+			$('#input_schedule_notification').val("")
+		}
+	};
+
+	function showTempBody() {
+		var select_status = $("#template").val();
+		var split = select_status.split(":");
+
+		//check for required param
+		if (templateData){
+			if (templateData[split[1]].structure.includes("{{")){
+				$('#paramList').show();
+				// $("#param").val("");
+
+				lengthParam = (templateData[split[1]].structure.match(new RegExp("{{", "g")) || []).length
+				console.log("count param: ",lengthParam)
+			}else{
+				$('#paramList').hide();
+				lengthParam = 0;
+				// $("#param").val("");
+			}	
+		}
+
+		var data
+		if (templateData) data = JSON.parse(templateData[split[1]].structure)
+		var res = "<div class='card-header'><ol>"
+		for(i=0;i<Object.keys(data).length;i++){
+			if(Object.keys(data)[i] == "header"){
+				
+			}else{
+				res += "<li><b>"+Object.keys(data)[i]+"</b>"+" = "+data[Object.keys(data)[i]]+"</li>"
+			}       
+		}
+		res += "</ol></div>"
+		$("#tempGuide").html(res);
+		$("#templateBody").show();
+	};
+
+	$(document).ready(function () {
+		$('#pahala').val(addCommas($('#pahala').val()))
+
+		$("#notification_schedule").DateTimePicker({
+            dateTimeFormat: "yyyy-MM-dd HH:mm:ss"
+        });
+		
+		//calculate age
+		console.log("dob", $("#select_date_chutao").val())
+		$("#select_date").val(moment($("#select_date").val()).format("YYYY-MM-DD"))
+
+		$("#select_date_chutao").val(moment($("#select_date_chutao").val()).format("YYYY-MM-DD"))
+		$("#age_counter").val(calculateAge())
+		console.log("dd", $("#select_date").val())
+		console.log("diff", moment().diff($("#select_date").val(), 'years', false))
+		
+		showTextBox();
+		showTime();
+	});
+
+	function posting(data) {
+		$.ajax({
+			method: "POST",
+			url: data.url,
+			data: data.param
+		}).done(data.done);
+	};
+
+	function check_email(){
+            console.log($("#param").val())
+
+            var reg = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+            var curremail = $("#param").val();
+            var email = curremail.split(',');
+			console.log("length ",lengthParam)
+			if (email.length <= 0 || email.length < lengthParam || email.length > lengthParam){
+				console.log("invalid count")
+				$('#emailHint').html('Please match the param count on the body!');
+				$("#param").removeClass("valid").addClass("invalid")
+				return false;
+			}
+            var checkemail = email[email.length-1];
+            console.log(email.length, checkemail)
+            console.log("curremail" , curremail)
+            if(curremail != ""){
+               
+                console.log("check space:", checkemail[checkemail.length-1])
+                if(checkemail[checkemail.length-1] !==  " " && !curremail.includes(' ')){
+					console.log("check sp")
+                    $("#param").removeClass("invalid").addClass("valid")
+                    $('#emailHint').html('');  
+                }
+            }else{
+                $('#emailHint').html('Is Empty!');
+				$("#param").removeClass("valid").addClass("invalid")
+				return false;   
+            }
+
+            var form_data=$("#formSendTemplate").serializeArray();
+            var error_free=true;
+            for (var input in form_data){
+                var element=$(form_data[input]['param']);
+                var valid=element.hasClass("valid");
+                var error_element=$("span", element.parent());
+                if (!valid){
+                    error_element.removeClass("error").addClass("error_show"); 
+                    error_free=false;
+                }
+                else{
+                    error_element.removeClass("error_show").addClass("error");
+                }
+            }
+    }
+  
+
+	function do_empty_field() {
+		if ($("#template").val() == "" || $("#template").val() == null){
+			alert("select a template");
+			return
+		}
+		if (lengthParam > 0) {
+			var chk = check_email();
+			if (chk == false){
+				alert("Please check parameter!")
+				return
+			} 
+		}
+
+		var items_group = []
+		var items_phone = []
+
+		for (var i = 0; i < group_token.getItems().length; i++) {
+			items_group.push(group_token.getItems()[i].id)
+		}
+		for (var i = 0; i < phone_token.getItems().length; i++) {
+			items_phone.push(phone_token.getItems()[i].id)
+		}
+
+		console.log("item pone grup", items_group, items_phone)
+		if (items_phone.length <= 0 && items_group.length <= 0){
+			alert("Input a receiver first!")
+			return
+		}
+
+		var select_status = $("#sendNow").is(":checked");
+		var scheduleForm = $('#input_schedule_notification').val()
+
+		if (!select_status){
+			if (scheduleForm == "") {
+				alert("Please input schedule value!")
+				return;
+			}
+			var dateNow = new Date();
+    		var selectedDate = new Date(scheduleForm);
+			if (selectedDate < dateNow) {
+				alert("Schedule value must bigger than current date")
+				return;
+			}
+		}
+		// passed the validation
+		$("#templateText").hide();
+		$("#spinnerLoad").show();
+
+		$("#btnSync").prop("disabled", true);
+
+		$.ajax({
+			method: "POST",
+			url: "/panels/compose/send_template",
+			data: {
+				app: $("#app").val(),
+				scene: $("#scene").val(),
+				toGroup:  $("#toGroup").is(":checked"),
+				items_group: items_group,
+				items_phone: items_phone,
+				template: $("#template").val(),
+				sendNow: select_status,
+				schedule:  moment(scheduleForm).format('YYYY-MM-DD HH:mm:ss'),
+				lengthParam: lengthParam,
+				param: $("#param").val()
+			}
+		}).done(function (res){
+			console.log(res)
+			alert(res.message);
+			window.location.href = "/panels/messages";
+			return
+		})
+
+	}
+
+</script>

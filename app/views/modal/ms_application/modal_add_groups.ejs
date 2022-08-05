@@ -1,0 +1,35 @@
+<!-- Modal ADD -->
+<div class="modal fade" id="addApp" tabindex="-1" role="dialog" aria-labelledby="addModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModalTitle">Add/Update Vihara</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+            </div>
+            <form id="formAddGroup" method="POST" action="/panels/admin/ms_panel_users_groups/input">
+                <div class="modal-body">
+                    <div class="form-group" style="display:none">
+                        <input type="hidden" name="app_id" id="app_id" />
+                    </div>
+                    <div class="form-group">
+                        <label for="title">Name</label>
+                        <input type="text" id="app_name" class="form-control" name="app_name" placeholder="App Name" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="title">Alamat</label>
+                        <textarea id="alamat" class="form-control" name="alamat" placeholder="Alamat Vihara" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="title">Kota</label>
+                        <input type="text" id="kota" class="form-control" name="kota" placeholder="Kota" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="buttonAddApp" type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
